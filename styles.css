@@ -132,11 +132,11 @@ main { display: flex; flex-direction: column; }
 @media (max-width: 600px) {
   .grid { grid-template-columns: 1fr; }
   .header-row { justify-content: center; row-gap: 8px; }
-  .nav { justify-content: center; gap: 16px; }
+  .nav { justify-content: center; gap: 4px 12px; }
+  .pill-small { padding-inline: 14px; }
 }
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
   .card, .pill { transition: none; }
   .card:has(a):hover { transform: none; }
 }
-
