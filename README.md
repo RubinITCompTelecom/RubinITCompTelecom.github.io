@@ -5,7 +5,7 @@ https://rubinitcomptelecom.github.io/
 
 ## Adding a project
 
-The grid is drawn from `projects.json`. To add a square, add one entry:
+The grid is drawn from `projects.json`. To add a card, add one entry:
 
 ```json
 {

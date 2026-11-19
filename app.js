@@ -1,4 +1,4 @@
-// Draws one square per entry in projects.json. No outside calls, all text escaped.
+// Draws one card per entry in projects.json. No outside calls, all text escaped.
 (function () {
   "use strict";
 
@@ -35,7 +35,7 @@
       "<h3>" + esc(p.title) + "</h3>" +
       "<p>" + esc(p.blurb) + "</p>" +
       (chips ? '<div class="chips">' + chips + "</div>" : "") +
-      (url ? '<a class="pill" href="' + esc(url) + '" aria-label="View ' + esc(p.title) + ' on GitHub">View on GitHub</a>'
+      (url ? '<a class="pill" href="' + esc(url) + '" aria-label="View on GitHub (' + esc(p.title) + ')">View on GitHub</a>'
            : '<p class="card-status">Coming soon</p>') +
       "</article>";
   }
