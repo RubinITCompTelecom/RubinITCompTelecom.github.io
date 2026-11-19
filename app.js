@@ -2,7 +2,7 @@
 (function () {
   "use strict";
 
-  // Small line icons, drawn in the card's icon tile. Pick one per project with "icon".
+  // Small line icons. Pick one per project with "icon".
   var ICONS = {
     usb: '<path d="M10 2h4v5h-4z"/><path d="M8 7h8v9a4 4 0 0 1-8 0z"/><path d="M12 20v2"/>',
     mail: '<rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/>',
@@ -27,14 +27,16 @@
   function card(p) {
     var url = safeUrl(p.repo);
     var icon = ICONS[p.icon] || ICONS.tool;
-    var chips = (p.tags || []).map(function (t) { return '<span class="chip">' + esc(t) + "</span>"; }).join("");
-    return '<article class="card' + (url ? "" : " card-soon") + '">' +
+    var chips = (p.tags || []).filter(function (t) {
+      return url || !/^coming soon$/i.test(String(t).trim());
+    }).map(function (t) { return '<span class="chip">' + esc(t) + "</span>"; }).join("");
+    return '<article class="card">' +
       '<div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg></div>" +
       "<h3>" + esc(p.title) + "</h3>" +
       "<p>" + esc(p.blurb) + "</p>" +
-      '<div class="chips">' + chips + "</div>" +
-      (url ? '<a class="pill" href="' + esc(url) + '" rel="noopener">View on GitHub</a>'
-           : '<span class="pill pill-soon">Coming soon</span>') +
+      (chips ? '<div class="chips">' + chips + "</div>" : "") +
+      (url ? '<a class="pill" href="' + esc(url) + '" aria-label="View ' + esc(p.title) + ' on GitHub">View on GitHub</a>'
+           : '<p class="card-status">Coming soon</p>') +
       "</article>";
   }
 
@@ -45,9 +47,9 @@
       list = (Array.isArray(list) ? list : []).filter(function (p) { return p && p.title; });
       grid.innerHTML = list.length
         ? list.map(card).join("")
-        : '<p class="loading">Projects are on their way.</p>';
+        : '<p class="loading">We’re preparing our first featured tools for release.</p>';
     })
     .catch(function () {
-      grid.innerHTML = '<p class="loading">Couldn\'t load the project list. Browse them at <a href="https://github.com/RubinITCompTelecom">github.com/RubinITCompTelecom</a>.</p>';
+      grid.innerHTML = '<p class="loading">The project list couldn’t load. You can still <a href="https://github.com/RubinITCompTelecom">browse our GitHub repositories</a>.</p>';
     });
 })();
