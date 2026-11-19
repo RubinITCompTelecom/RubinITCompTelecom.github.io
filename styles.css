@@ -3,7 +3,7 @@
   --navy: #352D59;
   --navy-deep: #2a2347;
   --orange: #E88829;
-  --orange-dark: #c96f17;
+  --orange-hover: #f6a54d;
   --bg: #FFFFFF;
   --bg-alt: #F4F4F4;
   --card: #FFFFFF;
@@ -55,26 +55,29 @@ body {
   line-height: 1.55;
 }
 a { color: inherit; }
+a:focus-visible { outline: 3px solid currentColor; outline-offset: 4px; }
 .wrap { max-width: 1180px; margin: 0 auto; padding: 0 16px; }
 
 /* Header */
-.site-header { background: var(--navy); color: #fff; position: sticky; top: 0; z-index: 10; }
+.site-header { background: var(--navy); color: #fff; }
 .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 76px; flex-wrap: wrap; padding-top: 10px; padding-bottom: 10px; }
 .lockup { display: inline-flex; flex-direction: column; line-height: 1; text-decoration: none; color: #fff; }
 .lockup-top { font-size: 30px; font-weight: 800; letter-spacing: .3px; }
 .lockup-it { color: var(--orange); }
 .lockup-sub { font-size: 12px; font-weight: 600; letter-spacing: 1.5px; text-transform: uppercase; margin-top: 4px; opacity: .9; }
 .nav { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
-.nav a { text-decoration: none; font-weight: 600; }
+.nav a, .footer-links a { display: inline-flex; align-items: center; min-height: 44px; text-decoration: none; font-weight: 600; }
 .nav a:not(.pill):hover { color: var(--orange); }
 
 /* Buttons */
 .pill {
-  display: inline-block; background: var(--orange); color: #fff; text-decoration: none;
+  display: inline-flex; align-items: center; min-height: 44px;
+  background: var(--orange); color: #211a33; text-decoration: none;
   font-weight: 700; border-radius: var(--pill); padding: 11px 24px; transition: background .15s;
 }
-.pill:hover { background: var(--orange-dark); }
-.pill:focus-visible, .card a:focus-visible, .nav a:focus-visible { outline: 3px solid var(--orange); outline-offset: 3px; }
+.pill:hover { background: var(--orange-hover); }
+.pill:focus-visible { outline-color: var(--text); }
+.hero .pill:focus-visible, .nav .pill:focus-visible { outline-color: #fff; }
 .pill-small { padding: 8px 18px; font-size: 15px; }
 
 /* Hero */
@@ -116,15 +119,14 @@ a { color: inherit; }
 .site-footer { background: var(--navy); color: #fff; padding: 36px 0 20px; }
 .footer-row { display: flex; justify-content: space-between; align-items: center; gap: 20px; flex-wrap: wrap; }
 .lockup-footer .lockup-top { font-size: 24px; }
-.footer-links { display: flex; gap: 22px; flex-wrap: wrap; }
-.footer-links a { text-decoration: none; font-weight: 600; }
+.footer-links { display: flex; gap: 0 22px; flex-wrap: wrap; }
 .footer-links a:hover { color: var(--orange); }
 .copyright { margin-top: 24px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,.15); font-size: 14px; opacity: .8; }
 
 @media (max-width: 600px) {
   .grid { grid-template-columns: 1fr; }
   .card { aspect-ratio: auto; min-height: 280px; }
-  .header-row { justify-content: center; }
+  .header-row { justify-content: center; row-gap: 8px; }
   .nav { justify-content: center; gap: 16px; }
 }
 @media (prefers-reduced-motion: reduce) {
