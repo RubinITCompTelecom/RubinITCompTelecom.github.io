@@ -1,0 +1,30 @@
+[
+  {
+    "name": "placeholder-1",
+    "title": "New project",
+    "blurb": "A tool from our day-to-day support work is being prepared for release.",
+    "tags": ["Coming soon"],
+    "icon": "tool"
+  },
+  {
+    "name": "placeholder-2",
+    "title": "New project",
+    "blurb": "A tool from our day-to-day support work is being prepared for release.",
+    "tags": ["Coming soon"],
+    "icon": "pulse"
+  },
+  {
+    "name": "placeholder-3",
+    "title": "New project",
+    "blurb": "A tool from our day-to-day support work is being prepared for release.",
+    "tags": ["Coming soon"],
+    "icon": "globe"
+  },
+  {
+    "name": "placeholder-4",
+    "title": "New project",
+    "blurb": "A tool from our day-to-day support work is being prepared for release.",
+    "tags": ["Coming soon"],
+    "icon": "clock"
+  }
+]
