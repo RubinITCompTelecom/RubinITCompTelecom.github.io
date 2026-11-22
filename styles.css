@@ -147,3 +147,6 @@ a { color: inherit; }
   .lockup { width: 160px; height: 53px; background: url("logo_lockup_rubin_it_bigger_dark_bg.png") left center / contain no-repeat; }
 .lockup-top, .lockup-sub { display: none; }
 .lockup-footer { width: 130px; height: 43px; }
+/* Centered hero */
+.hero { text-align: center; }
+.hero .lead, .hero .intro { margin-left: auto; margin-right: auto; }
