@@ -1,0 +1,42 @@
+name: Refresh releases snapshot
+
+# Rebuilds releases.json (latest GitHub release + notes for each project in projects.json).
+# The page shows this snapshot first and checks GitHub itself when it is older than 30 minutes,
+# so this hourly run is the fallback, as on it.aygross.xyz.
+on:
+  schedule:
+    - cron: "17 * * * *"
+  workflow_dispatch:
+  push:
+    paths:
+      - projects.json
+      - update_releases.py
+
+permissions:
+  contents: write
+
+concurrency:
+  group: releases-snapshot
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Rebuild releases.json
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 update_releases.py
+      - name: Commit if changed
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add releases.json
+          if git diff --cached --quiet; then
+            echo "Nothing to commit"
+          else
+            git commit -m "Refresh releases snapshot"
+            git pull --rebase -q || true
+            git push
+          fi
