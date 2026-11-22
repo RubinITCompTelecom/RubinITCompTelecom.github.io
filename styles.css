@@ -142,3 +142,8 @@ a { color: inherit; }
 .pill-soon { background: transparent; color: var(--muted); border: 2px dashed var(--muted); cursor: default; }
 .pill-soon:hover { background: transparent; }
 .card-soon { border-top-style: dashed; }
+
+/* Image logo from rubinit.net */
+  .lockup { width: 160px; height: 53px; background: url("logo_lockup_rubin_it_bigger_dark_bg.png") left center / contain no-repeat; }
+.lockup-top, .lockup-sub { display: none; }
+.lockup-footer { width: 130px; height: 43px; }
