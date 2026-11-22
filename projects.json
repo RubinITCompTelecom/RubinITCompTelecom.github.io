@@ -1,10 +1,12 @@
 [
   {
-    "name": "placeholder-1",
-    "title": "New project",
-    "blurb": "A tool from our day-to-day support work is being prepared for release.",
-    "tags": ["Coming soon"],
-    "icon": "tool"
+    "name": "screenconnect-cleanup",
+    "title": "ScreenConnect Cleanup",
+    "blurb": "Windows technician tool that finds every ScreenConnect instance, shows its relay host, and removes the ones you choose (quarantined, never deleted).",
+    "tags": ["Windows", "Security"],
+    "icon": "broom",
+    "repo": "https://github.com/RubinITCompTelecom/screenconnect-cleanup",
+    "releases": "pupontech/screenconnect-cleanup"
   },
   {
     "name": "placeholder-2",
