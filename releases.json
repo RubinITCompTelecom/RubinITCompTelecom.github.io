@@ -1,23 +1,23 @@
 {
-  "checkedAt": "2026-11-22T20:51:03Z",
+  "checkedAt": "2026-11-22T21:50:40Z",
   "projects": {
     "screenconnect-cleanup": {
-      "tag": "v1.8.13-beta.1",
-      "name": "v1.8.13-beta.1 - Latest Beta - reviewed cleanup and GUI",
-      "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/tag/v1.8.13-beta.1",
-      "published": "2026-11-22T14:15:15Z",
+      "tag": "v1.8.13-beta.2",
+      "name": "v1.8.13-beta.2 - Latest Beta - end-to-end review fixes",
+      "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/tag/v1.8.13-beta.2",
+      "published": "2026-11-22T21:22:29Z",
       "prerelease": false,
-      "body_html": "<p>BETA release and the new Latest download used by install-latest.ps1.</p>\n<p>Promotes the GUI Alpha 10 runtime, which passed hosted Windows CI, with no runtime code changes in this version promotion. Earlier releases remain available.</p>\n<p>Included behavior:</p>\n<ul>\n<li>Reviewed cleanup repairs and unchecked persistence-candidate selection checkboxes with typed REMOVE confirmation.</li>\n<li>Offline offers staged KVRT only; ESET and Malwarebytes installation remain Online-only.</li>\n<li>Clear Online continuation, separate-scan and cancellation choices.</li>\n<li>Fresh locked folders for each Online attempt, preserving Offline evidence and earlier scanner/persistence results and reports.</li>\n<li>Combined reports use the current Online evidence. Failed report generation prevents uploading an older or partial report.</li>\n<li>Current Online summary, report button and Desktop copy; explicit logging when antivirus scans are skipped.</li>\n</ul>\n<p>Extract the complete ZIP and open the top-level START-HERE-GUI.bat. The existing installer command now downloads this beta as Latest.</p>\n<p>Validation: Alpha 10 hosted Windows CI completed successfully (<a href=\"https://github.com/pupontech/screenconnect-cleanup/actions/runs/44087136061\">https://github.com/pupontech/screenconnect-cleanup/actions/runs/44087136061</a>). Local Alpha 10 checks included 106 stubbed GUI window assertions, 62 GUI/batch parity assertions, launcher and repeated-run/report-failure regressions, and real report generation/persistence WhatIf fixtures. Beta runtime bytes were compared to the tested Alpha 10 code; the beta ZIP passed integrity, manifest, exact source-byte, version and provenance checks, and its GUI self-test passed. No live removal or vendor antivirus scan was performed. Live elevated Windows acceptance remains outstanding.</p>\n<p>This build is labeled BETA. It is published as a regular GitHub release so GitHub Latest and the installer can select it.</p>\n<p>Source: <a class=\"commit-link\" data-hovercard-type=\"commit\" data-hovercard-url=\"https://github.com/RubinITCompTelecom/screenconnect-cleanup/commit/f323d3bc584d7079e50d39e81b21c73775ea0e62/hovercard\" href=\"https://github.com/RubinITCompTelecom/screenconnect-cleanup/commit/f323d3bc584d7079e50d39e81b21c73775ea0e62\"><tt>f323d3b</tt></a><br>\nZIP SHA-256: 0a11feeb38a057d0a7cd1e2563107dc7e6ced071f673e9ea069fe9ea17aa908e</p>",
+      "body_html": "<p>Latest beta. Replaces 1.8.13-beta.1 as the download used by the installer command.</p>\n<p>Hosted Windows CI (Windows Server 2022 and 2025) and the offline test set passed. Detection, snapshot and diff were also run read-only on a real Windows 11 PC. Live elevated Windows acceptance (removal, scanners, resume) is still outstanding.</p>\n<p><strong>Fixes</strong></p>\n<ul>\n<li>Removal: the uninstall-entry lookup no longer loses its results, a resume run keeps the first run's manifest entries, a finished resume removes its scheduled task, and a failed entry without an exit code no longer shows 0.</li>\n<li>Snapshots, diff and detector: the local-administrator flag is correct, the diff exits 2 on unusable input, Temp is walked once, and service-install events and the install folder date are handled correctly.</li>\n<li>Scanners and report: a missing or unreadable scanner log is reported as \"Results not available\", never as clean. KVRT paths with spaces stay distinct. Reports older than the scanner session are refused. TLS 1.2 is enabled before downloads.</li>\n<li>Persistence and power repair: both local policy folders are reset, Entra ID profiles are scanned, and the inventory has a 270 second overall budget.</li>\n<li>Launcher and GUI: an INCOMPLETE diff fails the run and is no longer announced as resurrection (RESURRECTION remains a finding). After-snapshot and diff failures reach the exit code. The report receives the diff and AV-uninstall sections. Stage tools names missing tools.</li>\n<li>Relay: the export honours <code>--since-unix</code>.</li>\n<li>Also includes the ZIP review fixes already on <code>main</code>.</li>\n</ul>\n<p>SHA-256 of <code>screenconnect-cleanup-v1.8.13-beta.2.zip</code>:<br>\n<code>55143747409e65d201d2a09e90b2a19a6b66ba729a0f79532ae86b6a73395355</code></p>",
       "assets": [
         {
-          "name": "screenconnect-cleanup-v1.8.13-beta.1.zip",
-          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.1/screenconnect-cleanup-v1.8.13-beta.1.zip",
-          "size": 625606
+          "name": "screenconnect-cleanup-v1.8.13-beta.2.zip",
+          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.2/screenconnect-cleanup-v1.8.13-beta.2.zip",
+          "size": 632823
         },
         {
-          "name": "screenconnect-cleanup-v1.8.13-beta.1.zip.sha256",
-          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.1/screenconnect-cleanup-v1.8.13-beta.1.zip.sha256",
-          "size": 108
+          "name": "screenconnect-cleanup-v1.8.13-beta.2.zip.sha256",
+          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.2/screenconnect-cleanup-v1.8.13-beta.2.zip.sha256",
+          "size": 107
         }
       ]
     }
