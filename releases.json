@@ -1,5 +1,5 @@
 {
-  "checkedAt": "2026-11-24T12:04:30Z",
+  "checkedAt": "2026-11-24T13:23:21Z",
   "projects": {
     "screenconnect-cleanup": {
       "tag": "v1.8.13-beta.2",
@@ -18,6 +18,46 @@
           "name": "screenconnect-cleanup-v1.8.13-beta.2.zip.sha256",
           "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.2/screenconnect-cleanup-v1.8.13-beta.2.zip.sha256",
           "size": 107
+        }
+      ]
+    },
+    "remote-diagnostics": {
+      "tag": "v2026-11-15.1",
+      "name": "Remote Diagnostics v2026-11-15.1",
+      "url": "https://github.com/RubinITCompTelecom/remote-diagnostics/releases/tag/v2026-11-15.1",
+      "published": "2026-11-24T13:22:11Z",
+      "prerelease": false,
+      "body_html": "<p>First public release.</p>\n<p><strong>Download</strong> <code>remote-diagnostics-v2026-11-15.1.zip</code> below, unzip it onto the PC and double-click <code>Run-RemoteDiagGui.bat</code> (it asks for administrator rights). Every tool also has its own <code>Run-*.bat</code> console launcher.</p>\n<p>What's in it:</p>\n<ul>\n<li>Pull logs from this PC or another one (WinRM): event logs, blue-screen and GPU/TDR decoding, minidumps, print queues and spooler errors, network state, startup items, EFI partition usage, one zip with a REVIEW LIST on top</li>\n<li>Enable / revert remote diagnostics (turns itself off after 48 hours)</li>\n<li>Deep persistence inventory, camera and startup check, wake-from-sleep device check</li>\n<li>Print-freeze watcher and a WSD -&gt; TCP/IP printer port fix</li>\n<li>Boot-failure log collector for WinRE / WinPE</li>\n</ul>\n<p>Windows 10 / 11, Windows PowerShell 5.1. See the README for the full guide.</p>\n<p>SHA-256: <code>7afeeee9eece6cdbbc744b8e09ea8726544410bb919d658558a6b0f2a1c755ef</code> (also in the <code>.sha256</code> file).</p>",
+      "assets": [
+        {
+          "name": "remote-diagnostics-v2026-11-15.1.zip",
+          "url": "https://github.com/RubinITCompTelecom/remote-diagnostics/releases/download/v2026-11-15.1/remote-diagnostics-v2026-11-15.1.zip",
+          "size": 205372
+        },
+        {
+          "name": "remote-diagnostics-v2026-11-15.1.zip.sha256",
+          "url": "https://github.com/RubinITCompTelecom/remote-diagnostics/releases/download/v2026-11-15.1/remote-diagnostics-v2026-11-15.1.zip.sha256",
+          "size": 102
+        }
+      ]
+    },
+    "student-times": {
+      "tag": "v2026-11-23.1",
+      "name": "Student Times v2026-11-23.1",
+      "url": "https://github.com/RubinITCompTelecom/student-times/releases/tag/v2026-11-23.1",
+      "published": "2026-11-24T13:21:20Z",
+      "prerelease": false,
+      "body_html": "<p>First public release.</p>\n<p><strong>Download</strong> <code>student-times-v2026-11-23.1.zip</code> below, unzip it onto the student PC and double-click <code>Run-StudentTimes.bat</code> (it asks for administrator rights).</p>\n<p>What's in it:</p>\n<ul>\n<li>Weekly logon-hours grid for one or many local accounts, applied with <code>net user /times</code></li>\n<li>Temporary unlock (today / 2 / 3 days) that re-locks by itself at midnight</li>\n<li>Logout tasks kept in step with the grid, time-change rights removed, clock-sync check</li>\n<li>Network Push: the same schedule to every PC in a classroom over WinRM</li>\n<li>Desktop Lock: no wallpaper/theme changes, Windows Spotlight off, optional fixed lock-screen picture</li>\n</ul>\n<p>Windows 10 / 11, Windows PowerShell 5.1. See the README for the full guide.</p>\n<p>SHA-256: <code>6bc843be8956f60ac4a66b1fdddf8319b6a85d5a7f956b4f6bf97d682f48c034</code> (also in the <code>.sha256</code> file).</p>",
+      "assets": [
+        {
+          "name": "student-times-v2026-11-23.1.zip",
+          "url": "https://github.com/RubinITCompTelecom/student-times/releases/download/v2026-11-23.1/student-times-v2026-11-23.1.zip",
+          "size": 64799
+        },
+        {
+          "name": "student-times-v2026-11-23.1.zip.sha256",
+          "url": "https://github.com/RubinITCompTelecom/student-times/releases/download/v2026-11-23.1/student-times-v2026-11-23.1.zip.sha256",
+          "size": 97
         }
       ]
     }
