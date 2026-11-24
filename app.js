@@ -5,6 +5,9 @@
 // Release data works like it.aygross.xyz: a shared snapshot (releases.json, rebuilt hourly by a
 // GitHub Action) is shown first; if it is older than 30 minutes the visit asks GitHub for the
 // newest release itself. If GitHub cannot be reached, the last saved data stays on screen.
+// Below the grid, "Screenshots and instructions" shows each project's README as GitHub renders it:
+// from readmes.json (rebuilt by the same hourly GitHub Action), or fetched live for a project that is
+// not in the snapshot yet. Links and images are made absolute and the HTML is sanitised before use.
 (function () {
   "use strict";
 
@@ -25,6 +28,10 @@
   };
 
   var grid = document.getElementById("grid");
+  var guidesBox = document.getElementById("guides");
+  var guideNav = document.getElementById("guide-nav");
+  var guideList = document.getElementById("guide-list");
+  var readmes = {};
   var projects = [];
   var snapshot = { checkedAt: null, projects: {} };
   var note = "";
@@ -145,7 +152,8 @@
     var head = '<div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg></div>" +
       "<h3>" + esc(p.title) + "</h3>" +
       "<p>" + esc(p.blurb) + "</p>" +
-      '<div class="chips">' + chips + "</div>";
+      '<div class="chips">' + chips + "</div>" +
+      (readmes[p.name] ? '<a class="card-guide" href="#guide-' + esc(p.name) + '">Screenshots &amp; how-to ↓</a>' : "");
 
     if (p.releases) {
       var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
@@ -175,6 +183,7 @@
     grid.innerHTML = projects.length
       ? projects.map(card).join("")
       : '<p class="loading">Projects are on their way.</p>';
+    renderGuides();
   }
 
   // ---- release window (modal) ----
@@ -182,6 +191,11 @@
   function cleanHtml(html) {
     var doc = new DOMParser().parseFromString("<div>" + html + "</div>", "text/html");
     var root = doc.body.firstChild;
+    sanitize(root);
+    return root.innerHTML;
+  }
+
+  function sanitize(root) {
     root.querySelectorAll("script,style,iframe,object,embed,form,link,meta,base").forEach(function (n) { n.remove(); });
     root.querySelectorAll("*").forEach(function (n) {
       Array.prototype.slice.call(n.attributes).forEach(function (a) {
@@ -194,7 +208,95 @@
         n.setAttribute("rel", "noopener noreferrer nofollow");
       }
     });
+  }
+
+  // ---- screenshots and instructions (README per project) ----
+
+  function repoOf(url) {
+    var m = /^https:\/\/github\.com\/([\w.\-]+\/[\w.\-]+)\/?$/.exec(url || "");
+    return m ? m[1] : null;
+  }
+
+  // GitHub's rendered README -> safe HTML for this page: no duplicate title, no permalink icons,
+  // relative images/links pointed at the repo, in-page anchors kept working under a per-project prefix.
+  function readmeHtml(name, entry) {
+    var doc = new DOMParser().parseFromString(String(entry.html || ""), "text/html");
+    var root = doc.querySelector("article.markdown-body") || doc.body;
+    var dir = String(entry.path || "README.md").replace(/[^\/]*$/, "");
+    var blobBase = "https://github.com/" + entry.repo + "/blob/HEAD/" + dir;
+    var rawBase = "https://raw.githubusercontent.com/" + entry.repo + "/HEAD/" + dir;
+    var pre = "guide-" + name + "-";
+    root.querySelectorAll("a.anchor, source").forEach(function (n) { n.remove(); });
+    var h1 = root.querySelector("h1");
+    if (h1) (h1.closest(".markdown-heading") || h1).remove();
+    root.querySelectorAll("[id]").forEach(function (n) { n.id = pre + n.id.replace(/^user-content-/, ""); });
+    root.querySelectorAll("[srcset]").forEach(function (n) { n.removeAttribute("srcset"); });
+    root.querySelectorAll("img[src]").forEach(function (n) {
+      var v = n.getAttribute("src").trim();
+      try { if (!/^https?:/i.test(v)) n.setAttribute("src", new URL(v, rawBase).href); } catch (e) { n.removeAttribute("src"); }
+      n.setAttribute("loading", "lazy");
+    });
+    root.querySelectorAll("a[href]").forEach(function (n) {
+      var v = n.getAttribute("href").trim();
+      var img = n.children.length === 1 && n.firstElementChild.tagName === "IMG" ? n.firstElementChild : null;
+      if (img && img.getAttribute("src")) n.setAttribute("href", img.getAttribute("src")); // a picture opens full size
+      else if (v.charAt(0) === "#") n.setAttribute("href", "#" + pre + v.slice(1).replace(/^user-content-/, ""));
+      else if (!/^(https?:|mailto:)/i.test(v)) {
+        try { n.setAttribute("href", new URL(v, blobBase).href); } catch (e) { n.removeAttribute("href"); }
+      }
+    });
+    sanitize(root);
     return root.innerHTML;
+  }
+
+  function guide(p) {
+    var entry = readmes[p.name];
+    var repoUrl = safeRepoUrl(p.repo);
+    var icon = ICONS[p.icon] || ICONS.tool;
+    var actions = "";
+    if (p.releases) {
+      var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
+      var asset = mainAsset(rel, p.releases);
+      if (rel) actions += '<span class="ver">' + esc(rel.tag) + "</span>";
+      if (asset) actions += '<a class="pill" href="' + esc(safeReleaseUrl(asset.url, p.releases)) + '" rel="noopener" title="' + esc(asset.name) + '">Download</a>';
+    }
+    if (repoUrl) actions += '<a class="pill pill-ghost" href="' + esc(repoUrl) + '" rel="noopener">View on GitHub</a>';
+    var body;
+    try { body = readmeHtml(p.name, entry); } catch (e) { body = ""; }
+    return '<article class="guide" id="guide-' + esc(p.name) + '" aria-labelledby="guide-title-' + esc(p.name) + '">' +
+      '<div class="guide-head"><div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg></div>" +
+      '<h3 id="guide-title-' + esc(p.name) + '">' + esc(p.title) + "</h3>" +
+      '<div class="guide-actions">' + actions + "</div></div>" +
+      '<p class="guide-blurb">' + esc(p.blurb) + "</p>" +
+      '<div class="readme">' + (body || "<p>See the README on GitHub.</p>") + "</div>" +
+      '<p class="guide-top"><a href="#projects">↑ Back to all projects</a></p></article>';
+  }
+
+  function renderGuides() {
+    if (!guidesBox) return;
+    var list = projects.filter(function (p) { return readmes[p.name] && safeRepoUrl(p.repo); });
+    if (!list.length) { guidesBox.hidden = true; return; }
+    guideNav.innerHTML = list.map(function (p) {
+      return '<a href="#guide-' + esc(p.name) + '">' + esc(p.title) + "</a>";
+    }).join("");
+    guideList.innerHTML = list.map(guide).join("");
+    guidesBox.hidden = false;
+  }
+
+  // A project that is not in readmes.json yet (new square, the hourly job has not run): ask GitHub.
+  function fetchMissingReadmes() {
+    var missing = projects.filter(function (p) { return repoOf(p.repo) && !readmes[p.name]; });
+    if (!missing.length) return;
+    Promise.all(missing.map(function (p) {
+      var repo = repoOf(p.repo);
+      return fetch(API + repo + "/readme", { headers: { Accept: "application/vnd.github.html" } })
+        .then(function (r) { return r.ok ? r.text() : null; })
+        .then(function (html) {
+          if (!html) return;
+          var m = /data-path="([^"]*)"/.exec(html);
+          readmes[p.name] = { repo: repo, path: m ? m[1] : "README.md", html: html };
+        }, function () {});
+    })).then(function () { render(); });
   }
 
   function modalBody(p) {
@@ -233,6 +335,7 @@
 
     out += '<p class="rel-links">' +
       (rel && safeReleaseUrl(rel.url, p.releases) ? '<a href="' + esc(safeReleaseUrl(rel.url, p.releases)) + '" rel="noopener">Release notes on GitHub ↗</a> ' : "") +
+      (readmes[p.name] ? '<a href="#guide-' + esc(p.name) + '" data-close="1">Screenshots and instructions ↓</a> ' : "") +
       (repoUrl ? '<a href="' + esc(repoUrl) + '" rel="noopener">View repository ↗</a> ' : "") +
       '<a href="' + esc(srcUrl) + '" rel="noopener">Release source ↗</a></p>';
 
@@ -329,13 +432,17 @@
 
   Promise.all([
     fetch("projects.json", { cache: "no-cache" }).then(function (r) { if (!r.ok) throw new Error(r.status); return r.json(); }),
-    fetch("releases.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+    fetch("releases.json", { cache: "no-store" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch("readmes.json", { cache: "no-cache" }).then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
   ]).then(function (res) {
+    readmes = res[2] && res[2].projects && typeof res[2].projects === "object" ? res[2].projects : {};
     projects = (Array.isArray(res[0]) ? res[0] : []).filter(function (p) { return p && p.title; });
     var shared = res[1] && typeof res[1].checkedAt === "string" && res[1].projects ? res[1] : null;
     snapshot = newer(shared, readLocal()) || snapshot;
     render();
     maybeRefresh();
+    fetchMissingReadmes();
+    if (location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
   }).catch(function () {
     grid.innerHTML = '<p class="loading">Couldn\'t load the project list. Browse them at <a href="https://github.com/RubinITCompTelecom">github.com/RubinITCompTelecom</a>.</p>';
   });
