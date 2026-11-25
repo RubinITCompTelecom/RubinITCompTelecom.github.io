@@ -3,7 +3,7 @@ name: Refresh releases snapshot
 # Rebuilds releases.json (latest GitHub release + notes for each project in projects.json).
 # The page shows this snapshot first and checks GitHub itself when it is older than 30 minutes,
 # so this hourly run is the fallback, as on it.aygross.xyz. It also rebuilds readmes.json (each
-# project's README, shown under "Screenshots and instructions").
+# project's README, shown on its project page under "Screenshots and instructions").
 on:
   schedule:
     - cron: "17 * * * *"

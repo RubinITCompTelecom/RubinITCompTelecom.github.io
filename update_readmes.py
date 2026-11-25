@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Rebuild readmes.json: GitHub's rendered README (HTML) for every project in projects.json that has a "repo".
-The page shows it under "Screenshots and instructions". Links and images are made absolute in the browser
+Each project page (project.html?p=<name>) shows it under "Screenshots and instructions". Links and images are made absolute in the browser
 (app.js), and the HTML is sanitised there before it is shown. If a fetch fails, the old entry is kept."""
 import json, re, sys, urllib.request, urllib.error, os
 

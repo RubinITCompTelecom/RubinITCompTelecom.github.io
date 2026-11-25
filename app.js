@@ -1,13 +1,12 @@
-// Draws one square per entry in projects.json.
-// A square with a "releases" repo (owner/name) shows its latest GitHub release:
-//   - the square has a direct download link taken from the release's files,
-//   - clicking the square opens the release notes.
-// Release data works like it.aygross.xyz: a shared snapshot (releases.json, rebuilt hourly by a
-// GitHub Action) is shown first; if it is older than 30 minutes the visit asks GitHub for the
-// newest release itself. If GitHub cannot be reached, the last saved data stays on screen.
-// Below the grid, "Screenshots and instructions" shows each project's README as GitHub renders it:
-// from readmes.json (rebuilt by the same hourly GitHub Action), or fetched live for a project that is
-// not in the snapshot yet. Links and images are made absolute and the HTML is sanitised before use.
+// Two pages share this script:
+//   index.html   - one square per entry in projects.json. Clicking a square opens that project's page.
+//   project.html - ?p=<name>: the project's latest release (downloads + notes) and its README
+//                  (screenshots and instructions), like the project pages on it.aygross.xyz.
+// Release data: a shared snapshot (releases.json, rebuilt hourly by a GitHub Action) is shown first;
+// if it is older than 30 minutes the visit asks GitHub for the newest release itself. If GitHub cannot
+// be reached, the last saved data stays on screen.
+// READMEs come from readmes.json (rebuilt by the same hourly Action), or are fetched live for a project
+// that is not in the snapshot yet. Links and images are made absolute and the HTML is sanitised before use.
 (function () {
   "use strict";
 
@@ -27,16 +26,13 @@
     download: '<path d="M12 3v12"/><path d="m7 11 5 5 5-5"/><path d="M4 20h16"/>'
   };
 
-  var grid = document.getElementById("grid");
-  var guidesBox = document.getElementById("guides");
-  var guideNav = document.getElementById("guide-nav");
-  var guideList = document.getElementById("guide-list");
+  var grid = document.getElementById("grid");          // home page
+  var detail = document.getElementById("project");      // project page
+  var pageName = detail ? new URLSearchParams(location.search).get("p") : null;
   var readmes = {};
   var projects = [];
   var snapshot = { checkedAt: null, projects: {} };
   var note = "";
-  var openName = null;
-  var lastFocus = null;
 
   function esc(s) {
     return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) {
@@ -66,6 +62,11 @@
     if (n >= 1048576) return (n / 1048576).toFixed(1) + " MB";
     return Math.max(1, Math.round(n / 1024)) + " KB";
   }
+  function iconSvg(p) {
+    return '<div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' +
+      (ICONS[p.icon] || ICONS.tool) + "</svg></div>";
+  }
+  function pageUrl(p) { return "project.html?p=" + encodeURIComponent(p.name); }
 
   // The file a visitor most likely wants: the first .zip, else the first file that is not a checksum.
   function mainAsset(rel, repo) {
@@ -122,10 +123,11 @@
   }
 
   function refreshLive() {
-    var withRel = projects.filter(function (p) { return p.releases; });
+    // On a project page only that project is checked.
+    var withRel = projects.filter(function (p) { return p.releases && (!pageName || p.name === pageName); });
     if (!withRel.length) return Promise.resolve();
     note = "Checking GitHub for newer releases…";
-    refreshOpenModal();
+    render();
     return Promise.all(withRel.map(function (p) {
       return checkOne(p).then(function (rel) { return { name: p.name, rel: rel, ok: true }; },
                               function () { return { name: p.name, ok: false }; });
@@ -133,7 +135,8 @@
       var failed = results.some(function (x) { return !x.ok; });
       var next = { checkedAt: snapshot.checkedAt, projects: JSON.parse(JSON.stringify(snapshot.projects || {})) };
       results.forEach(function (x) { if (x.ok) next.projects[x.name] = x.rel; });
-      if (!failed) next.checkedAt = new Date().toISOString();
+      // The shared timestamp only moves forward when every project was checked.
+      if (!failed && !pageName) next.checkedAt = new Date().toISOString();
       if (results.some(function (x) { return x.ok; })) {
         snapshot = next;
         saveLocal(snapshot);
@@ -143,50 +146,7 @@
     });
   }
 
-  // ---- cards ----
-
-  function card(p) {
-    var repoUrl = safeRepoUrl(p.repo);
-    var icon = ICONS[p.icon] || ICONS.tool;
-    var chips = (p.tags || []).map(function (t) { return '<span class="chip">' + esc(t) + "</span>"; }).join("");
-    var head = '<div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg></div>" +
-      "<h3>" + esc(p.title) + "</h3>" +
-      "<p>" + esc(p.blurb) + "</p>" +
-      '<div class="chips">' + chips + "</div>" +
-      (readmes[p.name] ? '<a class="card-guide" href="#guide-' + esc(p.name) + '">Screenshots &amp; how-to ↓</a>' : "");
-
-    if (p.releases) {
-      var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
-      var asset = mainAsset(rel, p.releases);
-      var ver;
-      if (rel) {
-        ver = '<span class="ver">' + esc(rel.tag) + (rel.prerelease ? " · prerelease" : "") + "</span>";
-      } else if (rel === null) {
-        ver = '<span class="ver ver-none">No release yet</span>';
-      } else {
-        ver = '<span class="ver ver-none">Checking…</span>';
-      }
-      var action = asset
-        ? '<a class="pill pill-dl" href="' + esc(safeReleaseUrl(asset.url, p.releases)) + '" rel="noopener" title="' + esc(asset.name) + '">Download</a>'
-        : '<span class="pill pill-notes">Release notes</span>';
-      return '<article class="card card-open" tabindex="0" role="button" data-name="' + esc(p.name) + '" aria-label="' + esc(p.title) + ': show latest release and notes">' +
-        head + '<div class="card-foot">' + ver + action + "</div></article>";
-    }
-
-    return '<article class="card' + (repoUrl ? "" : " card-soon") + '">' + head +
-      (repoUrl ? '<a class="pill" href="' + esc(repoUrl) + '" rel="noopener">View on GitHub</a>'
-               : '<span class="pill pill-soon">Coming soon</span>') +
-      "</article>";
-  }
-
-  function render() {
-    grid.innerHTML = projects.length
-      ? projects.map(card).join("")
-      : '<p class="loading">Projects are on their way.</p>';
-    renderGuides();
-  }
-
-  // ---- release window (modal) ----
+  // ---- sanitising GitHub HTML ----
 
   function cleanHtml(html) {
     var doc = new DOMParser().parseFromString("<div>" + html + "</div>", "text/html");
@@ -210,22 +170,20 @@
     });
   }
 
-  // ---- screenshots and instructions (README per project) ----
-
   function repoOf(url) {
     var m = /^https:\/\/github\.com\/([\w.\-]+\/[\w.\-]+)\/?$/.exec(url || "");
     return m ? m[1] : null;
   }
 
   // GitHub's rendered README -> safe HTML for this page: no duplicate title, no permalink icons,
-  // relative images/links pointed at the repo, in-page anchors kept working under a per-project prefix.
-  function readmeHtml(name, entry) {
+  // relative images/links pointed at the repo, in-page anchors kept working under a "readme-" prefix.
+  function readmeHtml(entry) {
     var doc = new DOMParser().parseFromString(String(entry.html || ""), "text/html");
     var root = doc.querySelector("article.markdown-body") || doc.body;
     var dir = String(entry.path || "README.md").replace(/[^\/]*$/, "");
     var blobBase = "https://github.com/" + entry.repo + "/blob/HEAD/" + dir;
     var rawBase = "https://raw.githubusercontent.com/" + entry.repo + "/HEAD/" + dir;
-    var pre = "guide-" + name + "-";
+    var pre = "readme-";
     root.querySelectorAll("a.anchor, source").forEach(function (n) { n.remove(); });
     var h1 = root.querySelector("h1");
     if (h1) (h1.closest(".markdown-heading") || h1).remove();
@@ -249,43 +207,11 @@
     return root.innerHTML;
   }
 
-  function guide(p) {
-    var entry = readmes[p.name];
-    var repoUrl = safeRepoUrl(p.repo);
-    var icon = ICONS[p.icon] || ICONS.tool;
-    var actions = "";
-    if (p.releases) {
-      var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
-      var asset = mainAsset(rel, p.releases);
-      if (rel) actions += '<span class="ver">' + esc(rel.tag) + "</span>";
-      if (asset) actions += '<a class="pill" href="' + esc(safeReleaseUrl(asset.url, p.releases)) + '" rel="noopener" title="' + esc(asset.name) + '">Download</a>';
-    }
-    if (repoUrl) actions += '<a class="pill pill-ghost" href="' + esc(repoUrl) + '" rel="noopener">View on GitHub</a>';
-    var body;
-    try { body = readmeHtml(p.name, entry); } catch (e) { body = ""; }
-    return '<article class="guide" id="guide-' + esc(p.name) + '" aria-labelledby="guide-title-' + esc(p.name) + '">' +
-      '<div class="guide-head"><div class="icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + icon + "</svg></div>" +
-      '<h3 id="guide-title-' + esc(p.name) + '">' + esc(p.title) + "</h3>" +
-      '<div class="guide-actions">' + actions + "</div></div>" +
-      '<p class="guide-blurb">' + esc(p.blurb) + "</p>" +
-      '<div class="readme">' + (body || "<p>See the README on GitHub.</p>") + "</div>" +
-      '<p class="guide-top"><a href="#projects">↑ Back to all projects</a></p></article>';
-  }
-
-  function renderGuides() {
-    if (!guidesBox) return;
-    var list = projects.filter(function (p) { return readmes[p.name] && safeRepoUrl(p.repo); });
-    if (!list.length) { guidesBox.hidden = true; return; }
-    guideNav.innerHTML = list.map(function (p) {
-      return '<a href="#guide-' + esc(p.name) + '">' + esc(p.title) + "</a>";
-    }).join("");
-    guideList.innerHTML = list.map(guide).join("");
-    guidesBox.hidden = false;
-  }
-
   // A project that is not in readmes.json yet (new square, the hourly job has not run): ask GitHub.
   function fetchMissingReadmes() {
-    var missing = projects.filter(function (p) { return repoOf(p.repo) && !readmes[p.name]; });
+    var missing = projects.filter(function (p) {
+      return repoOf(p.repo) && !readmes[p.name] && (!pageName || p.name === pageName);
+    });
     if (!missing.length) return;
     Promise.all(missing.map(function (p) {
       var repo = repoOf(p.repo);
@@ -299,13 +225,53 @@
     })).then(function () { render(); });
   }
 
-  function modalBody(p) {
-    var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
-    var repoUrl = safeRepoUrl(p.repo);
-    var srcUrl = "https://github.com/" + p.releases;
-    var out = "<h2 id=\"rel-title\">" + esc(p.title) + "</h2>";
+  // ---- home page: squares ----
 
-    if (!rel) {
+  function card(p) {
+    var repoUrl = safeRepoUrl(p.repo);
+    var chips = (p.tags || []).map(function (t) { return '<span class="chip">' + esc(t) + "</span>"; }).join("");
+    // The title link stretches over the whole square, so a click anywhere opens the project page.
+    var title = repoUrl
+      ? '<a class="card-link" href="' + esc(pageUrl(p)) + '">' + esc(p.title) + "</a>"
+      : esc(p.title);
+    var head = iconSvg(p) + "<h3>" + title + "</h3>" +
+      "<p>" + esc(p.blurb) + "</p>" +
+      '<div class="chips">' + chips + "</div>";
+
+    if (!repoUrl) {
+      return '<article class="card card-soon">' + head + '<span class="pill pill-soon">Coming soon</span></article>';
+    }
+
+    var ver = "", action = '<span class="pill pill-notes" aria-hidden="true">Details</span>';
+    if (p.releases) {
+      var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
+      var asset = mainAsset(rel, p.releases);
+      if (rel) ver = '<span class="ver">' + esc(rel.tag) + (rel.prerelease ? " · prerelease" : "") + "</span>";
+      else if (rel === null) ver = '<span class="ver ver-none">No release yet</span>';
+      else ver = '<span class="ver ver-none">Checking…</span>';
+      if (asset) action = '<a class="pill pill-dl" href="' + esc(safeReleaseUrl(asset.url, p.releases)) + '" rel="noopener" title="' + esc(asset.name) + '">Download</a>';
+    }
+    return '<article class="card card-open">' + head + '<div class="card-foot">' + ver + action + "</div></article>";
+  }
+
+  // ---- project page ----
+
+  function projectPage(p) {
+    var rel = p.releases && snapshot.projects ? snapshot.projects[p.name] : undefined;
+    var repoUrl = safeRepoUrl(p.repo);
+    var entry = readmes[p.name];
+    var chips = (p.tags || []).map(function (t) { return '<span class="chip">' + esc(t) + "</span>"; }).join("");
+    var out = '<header class="pj-head">' + iconSvg(p) +
+      '<div class="pj-title"><h1>' + esc(p.title) + "</h1>" +
+      '<div class="chips">' + chips + "</div></div></header>" +
+      '<p class="pj-blurb">' + esc(p.blurb) + "</p>";
+
+    // Downloads
+    out += '<section class="pj-box" aria-labelledby="pj-rel">';
+    out += '<h2 id="pj-rel">Download</h2>';
+    if (!p.releases) {
+      out += '<p class="rel-meta">This project has no packaged releases. Get it from the repository.</p>';
+    } else if (!rel) {
       out += '<p class="rel-meta">' + (rel === null ? "No published release yet." : "Release information not checked yet.") + "</p>";
     } else {
       var relUrl = safeReleaseUrl(rel.url, p.releases);
@@ -314,7 +280,6 @@
         (relUrl ? '<a href="' + esc(relUrl) + '" rel="noopener">' + esc(rel.tag) + " ↗</a>" : esc(rel.tag)) +
         " · " + esc(fmtDate(rel.published)) + "</p>";
       if (rel.prerelease) out += '<p class="rel-warn">This is a prerelease intended for testing, not a stable release.</p>';
-
       var files = (rel.assets || []).filter(function (a) { return safeReleaseUrl(a.url, p.releases); });
       var zips = files.filter(function (a) { return /\.zip$/i.test(a.name); });
       var show = zips.length ? zips : files;
@@ -324,110 +289,62 @@
             "<span>" + esc(a.name) + (a.size ? ' <em>(' + esc(fmtSize(a.size)) + ")</em>" : "") + "</span></li>";
         }).join("") + "</ul>";
       } else {
-        out += '<p class="rel-meta">No downloadable files are attached to this release. See GitHub for source archives and instructions.</p>';
+        out += '<p class="rel-meta">No downloadable files are attached to this release. See GitHub for source archives.</p>';
       }
-
-      out += "<h3>Release notes</h3>";
-      out += rel.body_html
-        ? '<div class="rel-notes">' + cleanHtml(rel.body_html) + "</div>"
-        : '<p class="rel-meta">This release has no notes.</p>';
     }
-
     out += '<p class="rel-links">' +
-      (rel && safeReleaseUrl(rel.url, p.releases) ? '<a href="' + esc(safeReleaseUrl(rel.url, p.releases)) + '" rel="noopener">Release notes on GitHub ↗</a> ' : "") +
-      (readmes[p.name] ? '<a href="#guide-' + esc(p.name) + '" data-close="1">Screenshots and instructions ↓</a> ' : "") +
-      (repoUrl ? '<a href="' + esc(repoUrl) + '" rel="noopener">View repository ↗</a> ' : "") +
-      '<a href="' + esc(srcUrl) + '" rel="noopener">Release source ↗</a></p>';
+      (repoUrl ? '<a href="' + esc(repoUrl) + '" rel="noopener">View repository on GitHub ↗</a>' : "") +
+      (p.releases ? '<a href="https://github.com/' + esc(p.releases) + '/releases" rel="noopener">All releases ↗</a>' : "") +
+      "</p>";
+    if (p.releases) {
+      out += '<p class="rel-checked">' + (note ? esc(note) + " " : "") +
+        (snapshot.checkedAt ? "Checked " + esc(fmtStamp(snapshot.checkedAt)) + " UTC." : "") + "</p>";
+    }
+    out += "</section>";
 
-    out += '<p class="rel-checked">' +
-      (note ? esc(note) + " " : "") +
-      (snapshot.checkedAt ? "Checked " + esc(fmtStamp(snapshot.checkedAt)) + " UTC · " : "") +
-      "checked on visits when the saved data is older than 30 minutes; hourly fallback.</p>";
+    // Screenshots and instructions
+    var body = "";
+    if (entry) { try { body = readmeHtml(entry); } catch (e) { body = ""; } }
+    out += '<section class="pj-box" aria-labelledby="pj-readme"><h2 id="pj-readme">Screenshots and instructions</h2>' +
+      '<div class="readme">' + (body || (entry === undefined && repoOf(p.repo) ? '<p class="rel-meta">Loading…</p>'
+        : '<p>See the README on GitHub.</p>')) + "</div></section>";
+
+    // Release notes
+    if (rel) {
+      out += '<section class="pj-box" aria-labelledby="pj-notes"><h2 id="pj-notes">Release notes · ' + esc(rel.tag) + "</h2>" +
+        (rel.body_html ? '<div class="rel-notes">' + cleanHtml(rel.body_html) + "</div>"
+                       : '<p class="rel-meta">This release has no notes.</p>') + "</section>";
+    }
     return out;
   }
 
-  function ensureModal() {
-    var m = document.getElementById("rel-modal");
-    if (m) return m;
-    m = document.createElement("div");
-    m.id = "rel-modal";
-    m.className = "rel-modal";
-    m.hidden = true;
-    m.innerHTML = '<div class="rel-backdrop" data-close="1"></div>' +
-      '<div class="rel-dialog" role="dialog" aria-modal="true" aria-labelledby="rel-title">' +
-      '<button type="button" class="rel-close" data-close="1" aria-label="Close">×</button>' +
-      '<div class="rel-content"></div></div>';
-    m.addEventListener("click", function (e) {
-      if (e.target && e.target.getAttribute && e.target.getAttribute("data-close")) closeModal();
-    });
-    document.body.appendChild(m);
-    return m;
-  }
+  // ---- drawing ----
 
-  function findProject(name) {
-    return projects.filter(function (p) { return p.name === name; })[0];
-  }
-
-  function openModal(name) {
-    var p = findProject(name);
-    if (!p) return;
-    openName = name;
-    lastFocus = document.activeElement;
-    var m = ensureModal();
-    m.querySelector(".rel-content").innerHTML = modalBody(p);
-    m.hidden = false;
-    document.body.classList.add("rel-open");
-    m.querySelector(".rel-close").focus();
-    // Like it.aygross.xyz: opening a project checks again when the saved data is stale.
-    maybeRefresh();
-  }
-
-  function refreshOpenModal() {
-    if (!openName) return;
-    var p = findProject(openName);
-    var m = document.getElementById("rel-modal");
-    if (p && m && !m.hidden) {
-      var box = m.querySelector(".rel-content");
-      var top = box.scrollTop;
-      box.innerHTML = modalBody(p);
-      box.scrollTop = top;
+  function render() {
+    if (grid) {
+      grid.innerHTML = projects.length
+        ? projects.map(card).join("")
+        : '<p class="loading">Projects are on their way.</p>';
+    }
+    if (detail) {
+      var p = projects.filter(function (x) { return x.name === pageName && safeRepoUrl(x.repo); })[0];
+      if (!p) {
+        detail.innerHTML = '<h1 class="pj-missing">Project not found</h1><p><a href="./">← All projects</a></p>';
+        return;
+      }
+      document.title = p.title + " · Rubin IT on GitHub";
+      // Keep the reader's place when the page is redrawn after a live check.
+      var y = window.scrollY;
+      detail.innerHTML = projectPage(p);
+      window.scrollTo(0, y);
     }
   }
-
-  function closeModal() {
-    var m = document.getElementById("rel-modal");
-    if (m) m.hidden = true;
-    document.body.classList.remove("rel-open");
-    openName = null;
-    if (lastFocus && lastFocus.focus) lastFocus.focus();
-  }
-
-  document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && openName) closeModal();
-    if ((e.key === "Enter" || e.key === " ") && e.target && e.target.classList && e.target.classList.contains("card-open")) {
-      e.preventDefault();
-      openModal(e.target.getAttribute("data-name"));
-    }
-  });
-
-  grid.addEventListener("click", function (e) {
-    var el = e.target;
-    if (el.closest && el.closest("a")) return; // the Download link is a real link
-    var c = el.closest ? el.closest(".card-open") : null;
-    if (c) openModal(c.getAttribute("data-name"));
-  });
 
   // ---- start ----
 
-  var refreshing = null;
   function isStale() {
     if (!snapshot.checkedAt) return true;
     return Date.now() - Date.parse(snapshot.checkedAt) > STALE_MS;
-  }
-  function maybeRefresh() {
-    if (refreshing || !isStale()) return;
-    refreshing = refreshLive().then(function () { refreshing = null; refreshOpenModal(); },
-                                    function () { refreshing = null; });
   }
 
   Promise.all([
@@ -440,10 +357,12 @@
     var shared = res[1] && typeof res[1].checkedAt === "string" && res[1].projects ? res[1] : null;
     snapshot = newer(shared, readLocal()) || snapshot;
     render();
-    maybeRefresh();
+    if (isStale()) refreshLive().catch(function () {});
     fetchMissingReadmes();
-    if (location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
+    if (detail && location.hash) { var t = document.getElementById(location.hash.slice(1)); if (t) t.scrollIntoView(); }
   }).catch(function () {
-    grid.innerHTML = '<p class="loading">Couldn\'t load the project list. Browse them at <a href="https://github.com/RubinITCompTelecom">github.com/RubinITCompTelecom</a>.</p>';
+    var msg = '<p class="loading">Couldn\'t load the project list. Browse them at <a href="https://github.com/RubinITCompTelecom">github.com/RubinITCompTelecom</a>.</p>';
+    if (grid) grid.innerHTML = msg;
+    if (detail) detail.innerHTML = msg;
   });
 })();

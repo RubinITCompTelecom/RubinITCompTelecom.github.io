@@ -163,24 +163,7 @@ a { color: inherit; }
 :root[data-theme="dark"] .pill-notes { color: #fff; border-color: #fff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill-notes { color: #fff; border-color: #fff; } }
 
-.rel-modal { position: fixed; inset: 0; z-index: 50; display: flex; align-items: center; justify-content: center; padding: 16px; }
-.rel-modal[hidden] { display: none; }
-.rel-backdrop { position: absolute; inset: 0; background: rgba(20, 16, 40, .62); }
-.rel-dialog {
-  position: relative; background: var(--card); color: var(--text); border-radius: var(--radius);
-  width: min(760px, 100%); max-height: min(88vh, 900px); display: flex; flex-direction: column;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, .45); border-top: 5px solid var(--orange);
-}
-.rel-close {
-  position: absolute; top: 10px; right: 14px; border: 0; background: transparent; color: var(--muted);
-  font-size: 30px; line-height: 1; cursor: pointer; padding: 4px 8px; border-radius: 8px;
-}
-.rel-close:hover { color: var(--orange); }
-.rel-content { overflow: auto; padding: 26px 28px 24px; }
-.rel-content h2 { margin: 0 36px 8px 0; font-size: 26px; font-weight: 800; color: var(--navy); }
-:root[data-theme="dark"] .rel-content h2 { color: #fff; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .rel-content h2 { color: #fff; } }
-.rel-content h3 { margin: 22px 0 8px; font-size: 18px; font-weight: 800; }
+.pj-box h3 { margin: 22px 0 8px; font-size: 18px; font-weight: 800; }
 .rel-meta { margin: 0 0 12px; color: var(--muted); }
 .rel-meta a { color: var(--orange-dark); font-weight: 700; }
 .rel-kind { background: var(--chip-bg); color: var(--chip-text); font-size: 12px; font-weight: 800; border-radius: var(--pill); padding: 3px 10px; margin-right: 6px; }
@@ -201,8 +184,6 @@ a { color: inherit; }
 .rel-notes th, .rel-notes td { border: 1px solid var(--chip-bg); padding: 4px 8px; }
 .rel-links { margin: 20px 0 0; display: flex; gap: 18px; flex-wrap: wrap; }
 .rel-checked { margin: 14px 0 0; font-size: 13px; color: var(--muted); }
-body.rel-open { overflow: hidden; }
-@media (max-width: 600px) { .rel-content { padding: 22px 18px 20px; } }
 
 /* Aligned squares (2026-11-24): every card in a row is the same height, and the title, description,
    tags and the version/Download row line up across cards (titles get two lines, descriptions three). */
@@ -211,32 +192,12 @@ body.rel-open { overflow: hidden; }
 .card h3 { min-height: calc(2 * 1.25em); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
 .card p { min-height: calc(3 * 1.55em); }
 .card .chips { min-height: 26px; }
-.card-guide { font-size: 13px; font-weight: 700; color: var(--orange-dark); text-decoration: none; margin: -6px 0 14px; align-self: flex-start; }
-.card-guide:hover { text-decoration: underline; }
-:root[data-theme="dark"] .card-guide { color: var(--orange); }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .card-guide { color: var(--orange); } }
 @media (max-width: 600px) { .card h3, .card p { min-height: 0; } }
 
-/* Screenshots and instructions: each project's README from GitHub, below the grid */
-.guides { background: var(--bg); padding: 56px 0 72px; }
-.guides[hidden] { display: none; }
-.guide-intro { margin: -14px 0 18px; color: var(--muted); }
-.guide-nav { display: flex; flex-wrap: wrap; gap: 10px; margin: 0 0 32px; }
-.guide-nav a { background: var(--chip-bg); color: var(--chip-text); text-decoration: none; font-weight: 700; font-size: 14px; border-radius: var(--pill); padding: 6px 14px; }
-.guide-nav a:hover { background: var(--orange); color: #fff; }
-.guide { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border-top: 5px solid var(--orange); padding: 28px 32px 26px; margin: 0 0 32px; scroll-margin-top: 16px; }
-.guide-head { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; margin-bottom: 6px; }
-.guide-head .icon { margin: 0; }
-.guide-head h3 { margin: 0; font-size: 26px; font-weight: 800; color: var(--navy); flex: 1 1 auto; }
-:root[data-theme="dark"] .guide-head h3 { color: #fff; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .guide-head h3 { color: #fff; } }
-.guide-actions { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
-.guide-actions .pill { padding: 9px 20px; font-size: 15px; }
 .pill-ghost { background: transparent; color: var(--navy); border: 2px solid var(--navy); padding: 7px 18px !important; }
 .pill-ghost:hover { background: var(--navy); color: #fff; }
 :root[data-theme="dark"] .pill-ghost { color: #fff; border-color: #fff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pill-ghost { color: #fff; border-color: #fff; } }
-.guide-blurb { color: var(--muted); margin: 8px 0 18px; }
 .readme { overflow-wrap: anywhere; border-top: 1px solid var(--chip-bg); padding-top: 8px; }
 .readme h1, .readme h2, .readme h3, .readme h4 { color: var(--text); font-weight: 800; line-height: 1.25; margin: 26px 0 10px; scroll-margin-top: 16px; }
 .readme h1 { font-size: 24px; } .readme h2 { font-size: 22px; } .readme h3 { font-size: 18px; } .readme h4 { font-size: 16px; }
@@ -255,8 +216,36 @@ body.rel-open { overflow: hidden; }
 .readme .markdown-alert { margin: 12px 0; padding: 8px 14px; border-left: 4px solid var(--orange); background: var(--bg-alt); border-radius: 6px; }
 .readme .markdown-alert-title { font-weight: 800; display: flex; align-items: center; gap: 6px; margin: 0 0 4px; }
 .readme svg.octicon { width: 16px; height: 16px; fill: currentColor; }
-.guide-top { margin: 18px 0 0; font-size: 14px; }
-.guide-top a { color: var(--muted); font-weight: 700; text-decoration: none; }
-.guide-top a:hover { color: var(--orange); }
-@media (max-width: 600px) { .guide { padding: 22px 18px 20px; } }
 .card .pill-soon { padding: 7px 18px; } /* same height as the Download pill (2px dashed border) */
+
+/* Whole square is a link to the project page (stretched title link); Download stays its own link. */
+.card { position: relative; }
+.card-link { color: inherit; text-decoration: none; }
+.card-link::after { content: ""; position: absolute; inset: 0; border-radius: var(--radius); }
+.card-link:focus-visible { outline: none; }
+.card-link:focus-visible::after { outline: 3px solid var(--orange); outline-offset: 3px; }
+.card .pill-dl { position: relative; z-index: 1; }
+
+/* Project page */
+.pj-bar { background: var(--navy); color: #fff; }
+.pj-bar-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; min-height: 72px; flex-wrap: wrap; }
+.pj-back { color: #fff; font-weight: 700; text-decoration: none; }
+.pj-back:hover, .pj-foot a:hover { color: var(--orange); }
+.pj-main { background: var(--bg-alt); padding: 40px 0 64px; }
+.pj-wrap { max-width: 900px; }
+.pj-head { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; }
+.pj-head .icon { margin: 0; width: 64px; height: 64px; border-radius: 16px; }
+.pj-head .icon svg { width: 34px; height: 34px; }
+.pj-title { flex: 1 1 240px; }
+.pj-title h1, .pj-missing { margin: 0 0 6px; font-size: clamp(28px, 4.5vw, 40px); line-height: 1.15; font-weight: 800; color: var(--navy); }
+.pj-title .chips { margin: 0; }
+.pj-blurb { font-size: 18px; color: var(--muted); margin: 16px 0 24px; }
+.pj-box { background: var(--card); border-radius: var(--radius); box-shadow: var(--shadow); border-top: 5px solid var(--orange); padding: 24px 28px; margin: 0 0 24px; }
+.pj-box h2 { margin: 0 0 12px; font-size: 22px; font-weight: 800; color: var(--navy); }
+.pj-box .readme { border-top: 0; padding-top: 0; }
+.pj-box .readme > :first-child { margin-top: 0; }
+.pj-foot { margin: 8px 0 0; }
+.pj-foot a { color: var(--muted); font-weight: 700; text-decoration: none; }
+:root[data-theme="dark"] .pj-title h1, :root[data-theme="dark"] .pj-missing, :root[data-theme="dark"] .pj-box h2 { color: #fff; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pj-title h1, :root:not([data-theme="light"]) .pj-missing, :root:not([data-theme="light"]) .pj-box h2 { color: #fff; } }
+@media (max-width: 600px) { .pj-box { padding: 20px 18px; } .pj-main { padding-top: 28px; } }
