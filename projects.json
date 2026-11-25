@@ -3,7 +3,10 @@
     "name": "screenconnect-cleanup",
     "title": "ScreenConnect Cleanup",
     "blurb": "Windows technician tool that finds every ScreenConnect instance, shows its relay host, and removes the ones you choose (quarantined, never deleted).",
-    "tags": ["Windows", "Security"],
+    "tags": [
+      "Windows",
+      "Security"
+    ],
     "icon": "broom",
     "repo": "https://github.com/RubinITCompTelecom/screenconnect-cleanup",
     "releases": "RubinITCompTelecom/screenconnect-cleanup"
@@ -12,7 +15,10 @@
     "name": "remote-access-tool-blocker",
     "title": "Remote-Access Tool Blocker",
     "blurb": "Blocks AnyDesk, TeamViewer, ScreenConnect, RustDesk and about fifty other remote-access tools that tech-support scammers abuse, using Windows App Control signer rules, with an optional ESET web-filter list.",
-    "tags": ["Windows", "Security"],
+    "tags": [
+      "Windows",
+      "Security"
+    ],
     "icon": "shield",
     "repo": "https://github.com/RubinITCompTelecom/remote-access-tool-blocker",
     "releases": "RubinITCompTelecom/remote-access-tool-blocker"
@@ -21,7 +27,10 @@
     "name": "remote-diagnostics",
     "title": "Remote Diagnostics",
     "blurb": "One window to find out why a Windows PC crashes, freezes, won't print or won't wake: event logs, blue screens, print queues and startup items, zipped with a review list.",
-    "tags": ["Windows", "Diagnostics"],
+    "tags": [
+      "Windows",
+      "Diagnostics"
+    ],
     "icon": "pulse",
     "repo": "https://github.com/RubinITCompTelecom/remote-diagnostics",
     "releases": "RubinITCompTelecom/remote-diagnostics"
@@ -30,16 +39,12 @@
     "name": "student-times",
     "title": "Student Times",
     "blurb": "Set the hours a Windows account can sign in with a click-and-drag weekly grid, with temporary unlocks, logout tasks and a push to every PC in the classroom.",
-    "tags": ["Windows", "Schools"],
+    "tags": [
+      "Windows",
+      "Schools"
+    ],
     "icon": "clock",
     "repo": "https://github.com/RubinITCompTelecom/student-times",
     "releases": "RubinITCompTelecom/student-times"
-  },
-  {
-    "name": "placeholder-3",
-    "title": "New project",
-    "blurb": "A tool from our day-to-day support work is being prepared for release.",
-    "tags": ["Coming soon"],
-    "icon": "globe"
   }
 ]
