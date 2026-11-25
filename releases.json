@@ -1,22 +1,22 @@
 {
-  "checkedAt": "2026-11-25T13:29:24Z",
+  "checkedAt": "2026-11-25T15:15:24Z",
   "projects": {
     "screenconnect-cleanup": {
-      "tag": "v1.8.13-beta.2",
-      "name": "v1.8.13-beta.2 - Latest Beta - end-to-end review fixes",
-      "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/tag/v1.8.13-beta.2",
-      "published": "2026-11-22T21:22:29Z",
+      "tag": "v1.8.13-beta.3",
+      "name": "v1.8.13-beta.3 - Latest Beta - signature never blocks removal, Continue online",
+      "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/tag/v1.8.13-beta.3",
+      "published": "2026-11-25T14:44:19Z",
       "prerelease": false,
-      "body_html": "<p>Latest beta. Replaces 1.8.13-beta.1 as the download used by the installer command.</p>\n<p>Hosted Windows CI (Windows Server 2022 and 2025) and the offline test set passed. Detection, snapshot and diff were also run read-only on a real Windows 11 PC. Live elevated Windows acceptance (removal, scanners, resume) is still outstanding.</p>\n<p><strong>Fixes</strong></p>\n<ul>\n<li>Removal: the uninstall-entry lookup no longer loses its results, a resume run keeps the first run's manifest entries, a finished resume removes its scheduled task, and a failed entry without an exit code no longer shows 0.</li>\n<li>Snapshots, diff and detector: the local-administrator flag is correct, the diff exits 2 on unusable input, Temp is walked once, and service-install events and the install folder date are handled correctly.</li>\n<li>Scanners and report: a missing or unreadable scanner log is reported as \"Results not available\", never as clean. KVRT paths with spaces stay distinct. Reports older than the scanner session are refused. TLS 1.2 is enabled before downloads.</li>\n<li>Persistence and power repair: both local policy folders are reset, Entra ID profiles are scanned, and the inventory has a 270 second overall budget.</li>\n<li>Launcher and GUI: an INCOMPLETE diff fails the run and is no longer announced as resurrection (RESURRECTION remains a finding). After-snapshot and diff failures reach the exit code. The report receives the diff and AV-uninstall sections. Stage tools names missing tools.</li>\n<li>Relay: the export honours <code>--since-unix</code>.</li>\n<li>Also includes the ZIP review fixes already on <code>main</code>.</li>\n</ul>\n<p>SHA-256 of <code>screenconnect-cleanup-v1.8.13-beta.2.zip</code>:<br>\n<code>55143747409e65d201d2a09e90b2a19a6b66ba729a0f79532ae86b6a73395355</code></p>",
+      "body_html": "<p>Latest beta. Replaces 1.8.13-beta.2 as the download used by the installer command.</p>\n<p>Hosted Windows CI (Windows Server 2022 and 2025) passed. Confirmed on a real PC on November 25, 2026: the intruder's ScreenConnect that 1.8.13-beta.2 refused (signature status <code>UnknownError</code>) was removed.</p>\n<p><strong>Changes</strong></p>\n<ul>\n<li>Removal: the executable's digital signature no longer blocks removal. An intruder's ScreenConnect whose signature Windows does not confirm (status <code>UnknownError</code>, for example the revoked ConnectWise certificate) was refused with \"PRODUCT VERIFICATION FAILED\" and left installed. Unsigned, altered, re-signed and look-alike copies are now removed too. Unchanged: the instance must sit in a ScreenConnect directory, have a ScreenConnect binary name and (with a service) a ScreenConnect service name, and the technician still approves by typing. Anything other than a valid ConnectWise signature is written as a SIGNATURE WARNING to the log and the removal manifest. Files are quarantined, never deleted.</li>\n<li>GUI: a finished Offline run shows <strong>Continue online</strong> next to <strong>Start over</strong>.</li>\n<li>README: Defender false-positive note; what the ScreenConnect tray icon looks like, and to stage on a separate PC and run Offline first when it is there.</li>\n</ul>\n<p><strong>SHA-256</strong> of <code>screenconnect-cleanup-v1.8.13-beta.3.zip</code>: <code>1ca13c3192356a5da868579b1a6b9229ac2207d3e41717ba8e989337da1ff3a1</code></p>",
       "assets": [
         {
-          "name": "screenconnect-cleanup-v1.8.13-beta.2.zip",
-          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.2/screenconnect-cleanup-v1.8.13-beta.2.zip",
-          "size": 632823
+          "name": "screenconnect-cleanup-v1.8.13-beta.3.zip",
+          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.3/screenconnect-cleanup-v1.8.13-beta.3.zip",
+          "size": 660289
         },
         {
-          "name": "screenconnect-cleanup-v1.8.13-beta.2.zip.sha256",
-          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.2/screenconnect-cleanup-v1.8.13-beta.2.zip.sha256",
+          "name": "screenconnect-cleanup-v1.8.13-beta.3.zip.sha256",
+          "url": "https://github.com/RubinITCompTelecom/screenconnect-cleanup/releases/download/v1.8.13-beta.3/screenconnect-cleanup-v1.8.13-beta.3.zip.sha256",
           "size": 107
         }
       ]
