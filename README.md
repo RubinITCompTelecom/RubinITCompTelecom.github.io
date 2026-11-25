@@ -18,7 +18,7 @@ The grid is drawn from `projects.json`. To add a square, add one entry:
 }
 ```
 
-`icon` is one of `usb`, `mail`, `broom`, `globe`, `clock`, `pulse`, `tool`. Only `https://github.com/...` links
+`icon` is one of `usb`, `mail`, `broom`, `globe`, `clock`, `pulse`, `shield`, `tool`, `download`. Only `https://github.com/...` links
 are accepted for `repo`.
 
 The site is plain HTML, CSS and JavaScript with no build step. Colours follow rubinit.net: navy `#352D59` and
