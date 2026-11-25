@@ -11,7 +11,7 @@
   "use strict";
 
   var STALE_MS = 30 * 60 * 1000;
-  var STORE_KEY = "rit-releases-v1";
+  var STORE_KEY = "rit-releases-v2"; // v2 adds prereleases
   var API = "https://api.github.com/repos/";
 
   // Small line icons, drawn in the card's icon tile. Pick one per project with "icon".
@@ -32,7 +32,7 @@
   var pageName = detail ? new URLSearchParams(location.search).get("p") : null;
   var readmes = {};
   var projects = [];
-  var snapshot = { checkedAt: null, projects: {} };
+  var snapshot = { checkedAt: null, projects: {}, prereleases: {} };
   var note = "";
 
   function esc(s) {
@@ -103,22 +103,27 @@
   function readLocal() {
     try {
       var s = JSON.parse(localStorage.getItem(STORE_KEY) || "null");
-      if (s && typeof s.checkedAt === "string" && s.projects) return s;
+      if (s && typeof s.checkedAt === "string" && s.projects) { s.prereleases = s.prereleases || {}; return s; }
     } catch (e) {}
     return null;
   }
   function saveLocal(s) { try { localStorage.setItem(STORE_KEY, JSON.stringify(s)); } catch (e) {} }
 
   function checkOne(p) {
-    return fetch(API + p.releases + "/releases?per_page=5", {
+    return fetch(API + p.releases + "/releases?per_page=30", {
       cache: "no-store",
       headers: { Accept: "application/vnd.github.html+json" }
     }).then(function (r) {
-      if (r.status === 404) return null; // repo has no releases (or is not public)
+      if (r.status === 404) return { rel: null, pre: null }; // repo has no releases (or is not public)
       if (!r.ok) throw new Error(r.status);
       return r.json().then(function (list) {
-        var pick = (Array.isArray(list) ? list : []).filter(function (x) { return !x.draft; })[0];
-        return pick ? normalize(pick) : null;
+        // Same choice as update_releases.py: the latest stable release, plus the newest prerelease when it is newer.
+        list = (Array.isArray(list) ? list : []).filter(function (x) { return !x.draft; });
+        var stable = list.filter(function (x) { return !x.prerelease; })[0];
+        var pre = list.filter(function (x) { return x.prerelease; })[0];
+        if (!stable) return { rel: pre ? normalize(pre) : null, pre: null };
+        var newerPre = pre && String(pre.created_at || "") > String(stable.created_at || ""); // commit date: survives mirroring
+        return { rel: normalize(stable), pre: newerPre ? normalize(pre) : null };
       });
     });
   }
@@ -130,12 +135,13 @@
     note = "Checking GitHub for newer releases…";
     render();
     return Promise.all(withRel.map(function (p) {
-      return checkOne(p).then(function (rel) { return { name: p.name, rel: rel, ok: true }; },
+      return checkOne(p).then(function (r) { return { name: p.name, rel: r.rel, pre: r.pre, ok: true }; },
                               function () { return { name: p.name, ok: false }; });
     })).then(function (results) {
       var failed = results.some(function (x) { return !x.ok; });
-      var next = { checkedAt: snapshot.checkedAt, projects: JSON.parse(JSON.stringify(snapshot.projects || {})) };
-      results.forEach(function (x) { if (x.ok) next.projects[x.name] = x.rel; });
+      var next = { checkedAt: snapshot.checkedAt, projects: JSON.parse(JSON.stringify(snapshot.projects || {})),
+                   prereleases: JSON.parse(JSON.stringify(snapshot.prereleases || {})) };
+      results.forEach(function (x) { if (x.ok) { next.projects[x.name] = x.rel; next.prereleases[x.name] = x.pre; } });
       // The shared timestamp only moves forward when every project was checked.
       if (!failed && !pageName) next.checkedAt = new Date().toISOString();
       if (results.some(function (x) { return x.ok; })) {
@@ -247,7 +253,9 @@
     if (p.releases) {
       var rel = snapshot.projects ? snapshot.projects[p.name] : undefined;
       var asset = mainAsset(rel, p.releases);
-      if (rel) ver = '<span class="ver">' + esc(rel.tag) + (rel.prerelease ? " · prerelease" : "") + "</span>";
+      var preRel = snapshot.prereleases ? snapshot.prereleases[p.name] : null;
+      if (rel) ver = '<span class="ver">' + esc(rel.tag) + (rel.prerelease ? " · prerelease" : "") +
+        (preRel ? '<span class="ver-pre">Prerelease ' + esc(preRel.tag) + "</span>" : "") + "</span>";
       else if (rel === null) ver = '<span class="ver ver-none">No release yet</span>';
       else ver = '<span class="ver ver-none">Checking…</span>';
       if (asset) action = '<a class="pill pill-dl" href="' + esc(safeReleaseUrl(asset.url, p.releases)) + '" rel="noopener" title="' + esc(asset.name) + '">Download</a>';
@@ -257,8 +265,38 @@
 
   // ---- project page ----
 
+  // Version line, prerelease warning and download buttons for one release.
+  function releaseBlock(p, rel) {
+    var relUrl = safeReleaseUrl(rel.url, p.releases);
+    var out = '<p class="rel-meta"><span class="rel-kind' + (rel.prerelease ? " rel-kind-pre" : "") + '">' +
+      (rel.prerelease ? "Prerelease" : "Latest release") + "</span> " +
+      (relUrl ? '<a href="' + esc(relUrl) + '" rel="noopener">' + esc(rel.tag) + " ↗</a>" : esc(rel.tag)) +
+      " · " + esc(fmtDate(rel.published)) + "</p>";
+    if (rel.prerelease) out += '<p class="rel-warn">This is a prerelease intended for testing, not a stable release.</p>';
+    var files = (rel.assets || []).filter(function (a) { return safeReleaseUrl(a.url, p.releases); });
+    var zips = files.filter(function (a) { return /\.zip$/i.test(a.name); });
+    var show = zips.length ? zips : files;
+    if (show.length) {
+      out += '<ul class="rel-files" aria-label="' + esc(rel.tag) + ' downloads">' + show.map(function (a) {
+        return '<li><a class="pill ' + (rel.prerelease ? "pill-ghost" : "pill-dl") + '" href="' + esc(safeReleaseUrl(a.url, p.releases)) + '" rel="noopener">Download</a> ' +
+          "<span>" + esc(a.name) + (a.size ? ' <em>(' + esc(fmtSize(a.size)) + ")</em>" : "") + "</span></li>";
+      }).join("") + "</ul>";
+    } else {
+      out += '<p class="rel-meta">No downloadable files are attached to this release. See GitHub for source archives.</p>';
+    }
+    return out;
+  }
+
+  function notesBlock(rel, id) {
+    return '<section class="pj-box" aria-labelledby="' + id + '"><h2 id="' + id + '">' +
+      (rel.prerelease ? "Prerelease notes · " : "Release notes · ") + esc(rel.tag) + "</h2>" +
+      (rel.body_html ? '<div class="rel-notes">' + cleanHtml(rel.body_html) + "</div>"
+                     : '<p class="rel-meta">This release has no notes.</p>') + "</section>";
+  }
+
   function projectPage(p) {
     var rel = p.releases && snapshot.projects ? snapshot.projects[p.name] : undefined;
+    var pre = rel && snapshot.prereleases ? snapshot.prereleases[p.name] : null;
     var repoUrl = safeRepoUrl(p.repo);
     var entry = readmes[p.name];
     var chips = (p.tags || []).map(function (t) { return '<span class="chip">' + esc(t) + "</span>"; }).join("");
@@ -275,23 +313,8 @@
     } else if (!rel) {
       out += '<p class="rel-meta">' + (rel === null ? "No published release yet." : "Release information not checked yet.") + "</p>";
     } else {
-      var relUrl = safeReleaseUrl(rel.url, p.releases);
-      out += '<p class="rel-meta"><span class="rel-kind' + (rel.prerelease ? " rel-kind-pre" : "") + '">' +
-        (rel.prerelease ? "Prerelease" : "Latest release") + "</span> " +
-        (relUrl ? '<a href="' + esc(relUrl) + '" rel="noopener">' + esc(rel.tag) + " ↗</a>" : esc(rel.tag)) +
-        " · " + esc(fmtDate(rel.published)) + "</p>";
-      if (rel.prerelease) out += '<p class="rel-warn">This is a prerelease intended for testing, not a stable release.</p>';
-      var files = (rel.assets || []).filter(function (a) { return safeReleaseUrl(a.url, p.releases); });
-      var zips = files.filter(function (a) { return /\.zip$/i.test(a.name); });
-      var show = zips.length ? zips : files;
-      if (show.length) {
-        out += '<ul class="rel-files" aria-label="Downloads">' + show.map(function (a) {
-          return '<li><a class="pill pill-dl" href="' + esc(safeReleaseUrl(a.url, p.releases)) + '" rel="noopener">Download</a> ' +
-            "<span>" + esc(a.name) + (a.size ? ' <em>(' + esc(fmtSize(a.size)) + ")</em>" : "") + "</span></li>";
-        }).join("") + "</ul>";
-      } else {
-        out += '<p class="rel-meta">No downloadable files are attached to this release. See GitHub for source archives.</p>';
-      }
+      out += releaseBlock(p, rel);
+      if (pre) out += '<div class="rel-pre-block">' + releaseBlock(p, pre) + "</div>";
     }
     out += '<p class="rel-links">' +
       (repoUrl ? '<a href="' + esc(repoUrl) + '" rel="noopener">View repository on GitHub ↗</a>' : "") +
@@ -311,11 +334,8 @@
         : '<p>See the README on GitHub.</p>')) + "</div></section>";
 
     // Release notes
-    if (rel) {
-      out += '<section class="pj-box" aria-labelledby="pj-notes"><h2 id="pj-notes">Release notes · ' + esc(rel.tag) + "</h2>" +
-        (rel.body_html ? '<div class="rel-notes">' + cleanHtml(rel.body_html) + "</div>"
-                       : '<p class="rel-meta">This release has no notes.</p>') + "</section>";
-    }
+    if (rel) out += notesBlock(rel, "pj-notes");
+    if (pre) out += notesBlock(pre, "pj-pre-notes");
     return out;
   }
 
@@ -356,6 +376,7 @@
     readmes = res[2] && res[2].projects && typeof res[2].projects === "object" ? res[2].projects : {};
     projects = (Array.isArray(res[0]) ? res[0] : []).filter(function (p) { return p && p.title; });
     var shared = res[1] && typeof res[1].checkedAt === "string" && res[1].projects ? res[1] : null;
+    if (shared) shared.prereleases = shared.prereleases || {};
     snapshot = newer(shared, readLocal()) || snapshot;
     render();
     if (isStale()) refreshLive().catch(function () {});

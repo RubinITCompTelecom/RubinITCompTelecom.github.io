@@ -249,3 +249,10 @@ a { color: inherit; }
 :root[data-theme="dark"] .pj-title h1, :root[data-theme="dark"] .pj-missing, :root[data-theme="dark"] .pj-box h2 { color: #fff; }
 @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .pj-title h1, :root:not([data-theme="light"]) .pj-missing, :root:not([data-theme="light"]) .pj-box h2 { color: #fff; } }
 @media (max-width: 600px) { .pj-box { padding: 20px 18px; } .pj-main { padding-top: 28px; } }
+
+/* Stable release plus a newer prerelease */
+.ver-pre { display: block; font-weight: 600; font-size: 12px; color: #a35a10; margin-top: 2px; }
+:root[data-theme="dark"] .ver-pre { color: var(--orange); }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .ver-pre { color: var(--orange); } }
+.rel-pre-block { margin-top: 18px; padding-top: 16px; border-top: 1px dashed var(--chip-bg); }
+.rel-files .pill-ghost { padding: 9px 22px !important; }

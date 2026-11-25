@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
-"""Rebuild releases.json: the newest GitHub release for every project in projects.json that has a "releases" repo.
+"""Rebuild releases.json for every project in projects.json that has a "releases" repo:
+  projects[name]    - the latest stable release (or the newest prerelease when there is no stable one), or null
+  prereleases[name] - the newest prerelease when it is newer than that stable release, else null
 Same data the page fetches itself when the snapshot is older than 30 minutes."""
 import json, os, sys, datetime, urllib.request, urllib.error
 
@@ -30,16 +32,29 @@ try:
 except Exception:
     old = {"checkedAt": None, "projects": {}}
 
-out = {"checkedAt": None, "projects": dict(old.get("projects", {}))}
+def pick(lst):
+    """(main, newer prerelease) from a newest-first release list, drafts skipped."""
+    lst = [x for x in (lst or []) if not x.get("draft")]
+    stable = next((x for x in lst if not x.get("prerelease")), None)
+    pre = next((x for x in lst if x.get("prerelease")), None)
+    if not stable:
+        return pre, None
+    # created_at is the release commit's date, so it keeps its order on a mirror (published_at is the copy time).
+    if pre and (pre.get("created_at") or "") > (stable.get("created_at") or ""):
+        return stable, pre
+    return stable, None
+
+out = {"checkedAt": None, "projects": dict(old.get("projects", {})), "prereleases": dict(old.get("prereleases", {}))}
 failed = False
 for p in projects:
     repo = p.get("releases")
     if not repo:
         continue
     try:
-        lst = get("https://api.github.com/repos/%s/releases?per_page=5" % repo, token)
-        pick = next((x for x in (lst or []) if not x.get("draft")), None)
-        out["projects"][p["name"]] = norm(pick) if pick else None
+        lst = get("https://api.github.com/repos/%s/releases?per_page=30" % repo, token)
+        main, pre = pick(lst)
+        out["projects"][p["name"]] = norm(main) if main else None
+        out["prereleases"][p["name"]] = norm(pre) if pre else None
     except Exception as e:
         failed = True
         print("check failed for %s: %s" % (repo, e), file=sys.stderr)
